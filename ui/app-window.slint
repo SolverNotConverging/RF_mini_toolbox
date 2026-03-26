@@ -1,0 +1,187 @@
+import {
+    LineEdit,
+    Button,
+} from "std-widgets.slint";
+
+component LabeledInput inherits Rectangle {
+    in property <string> label_text;
+    in property <string> unit_text;
+    in-out property <string> text_value;
+
+    background: transparent;
+    min-height: 42px;
+
+    HorizontalLayout {
+        padding-left: 4px;
+        padding-right: 4px;
+        spacing: 10px;
+        alignment: start;
+
+        Text {
+            text: label_text;
+            min-width: 90px;
+            vertical-alignment: center;
+        }
+
+        Rectangle {
+            border-color: #c8ccd4;
+            border-width: 1px;
+            border-radius: 6px;
+            background: white;
+            min-width: 120px;
+            height: 32px;
+
+            LineEdit {
+                text <=> text_value;
+                x: 8px;
+                y: 6px;
+                width: parent.width - 16px;
+                height: parent.height - 12px;
+            }
+        }
+
+        Text {
+            text: unit_text;
+            min-width: 35px;
+            vertical-alignment: center;
+            color: #666666;
+        }
+    }
+}
+
+export component MainWindow inherits Window {
+    width: 600px;
+    height: 300px;
+    title: "RF Wavelength Calculator";
+
+    in-out property <string> eps_r_str: "1.000";
+    in-out property <string> mu_r_str: "1.000";
+    in-out property <string> freq_str: "1.000";
+    in-out property <string> lambda_str: "300.000";
+
+    property <float> eps_r;
+    property <float> mu_r;
+    property <float> freq;
+    property <float> lambda;
+
+    Rectangle {
+        background: #eef2f7;
+
+        Rectangle {
+            width: 600px;
+            height: 260px;
+            x: (parent.width - self.width) / 2;
+            y: 40px;
+
+            background: #ffffff;
+            border-color: #d6dbe4;
+            border-width: 1px;
+            border-radius: 12px;
+
+ Rectangle { min-width: 16px; min-height: 16px; /* @lsp:ignore-node */ }        }
+        VerticalLayout {
+            padding: 18px;
+            spacing: 16px;
+
+            VerticalLayout {
+                spacing: 4px;
+
+
+
+                Text {
+                    text: "Convert between frequency (GHz) and wavelength (mm)";
+                    color: #667085;
+                    font-size: 12px;
+                }
+                Text {
+                    text: "RF Medium Calculator";
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: #1f2937;
+                }
+            }
+
+            HorizontalLayout {
+                spacing: 24px;
+
+                VerticalLayout {
+                    spacing: 10px;
+                    horizontal-stretch: 1;
+
+                    LabeledInput {
+                        label_text: "εr";
+                        unit_text: "";
+                        text_value <=> eps_r_str;
+                    }
+
+                    LabeledInput {
+                        label_text: "Frequency";
+                        unit_text: "GHz";
+                        text_value <=> freq_str;
+                    }
+                }
+
+                VerticalLayout {
+                    spacing: 10px;
+                    horizontal-stretch: 1;
+
+                    LabeledInput {
+                        label_text: "μr";
+                        unit_text: "";
+                        text_value <=> mu_r_str;
+                    }
+
+                    LabeledInput {
+                        label_text: "Wavelength";
+                        unit_text: "mm";
+                        text_value <=> lambda_str;
+                    }
+                }
+            }
+
+            Rectangle {
+                height: 1px;
+                background: #e5e7eb;
+            }
+
+            HorizontalLayout {
+                spacing: 12px;
+                alignment: center;
+
+                Button {
+                    min-width: 160px;
+                    text: "Convert f → λ";
+                    clicked => {
+                        eps_r = eps_r_str.to-float();
+                        mu_r = mu_r_str.to-float();
+                        freq = freq_str.to-float();
+
+                        lambda = 300 / (freq * sqrt(eps_r * mu_r));
+
+                        eps_r_str = eps_r.to-fixed(3);
+                        mu_r_str = mu_r.to-fixed(3);
+                        freq_str = freq.to-fixed(3);
+                        lambda_str = lambda.to-fixed(3);
+                    }
+                }
+
+                Button {
+                    min-width: 160px;
+                    text: "Convert λ → f";
+                    clicked => {
+                        eps_r = eps_r_str.to-float();
+                        mu_r = mu_r_str.to-float();
+                        lambda = lambda_str.to-float();
+
+                        freq = 300 / (lambda * sqrt(eps_r * mu_r));
+
+                        eps_r_str = eps_r.to-fixed(3);
+                        mu_r_str = mu_r.to-fixed(3);
+                        freq_str = freq.to-fixed(3);
+                        lambda_str = lambda.to-fixed(3);
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,7 @@
 slint::include_modules!();
 
-fn main() {
-    let app = App::new().unwrap();
-    app.run().unwrap();
+fn main() -> Result<(), slint::PlatformError> {
+    let app = MainWindow::new()?;
+
+    app.run()
 }
