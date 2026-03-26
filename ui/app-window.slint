@@ -78,7 +78,11 @@ export component MainWindow inherits Window {
             border-width: 1px;
             border-radius: 12px;
 
- Rectangle { min-width: 16px; min-height: 16px; /* @lsp:ignore-node */ }        }
+            Rectangle {
+                min-width: 16px;
+                min-height: 16px; /* @lsp:ignore-node */ }
+        }
+
         VerticalLayout {
             padding: 18px;
             spacing: 16px;
@@ -86,13 +90,12 @@ export component MainWindow inherits Window {
             VerticalLayout {
                 spacing: 4px;
 
-
-
                 Text {
                     text: "Convert between frequency (GHz) and wavelength (mm)";
                     color: #667085;
                     font-size: 12px;
                 }
+
                 Text {
                     text: "RF Medium Calculator";
                     font-size: 20px;
