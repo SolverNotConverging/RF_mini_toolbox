@@ -13,6 +13,24 @@ into a single GUI application:
 - Inductor/capacitor to reactance conversion
 - Microstrip synthesis and analysis estimates
 
+## Screenshots
+
+### Frequency / Wavelength
+
+![Frequency to wavelength demo](demo_screenshot/freq_to_wl.png)
+
+### 2-Port Matrix Converter
+
+![Matrix conversion demo](demo_screenshot/matrix_conversion.png)
+
+### Reactance Tool
+
+![L/C to impedance demo](demo_screenshot/lc_to_impedance.png)
+
+### Microstrip Tool
+
+![Microstrip demo](demo_screenshot/microstrip.png)
+
 ## Tech Stack
 
 - Rust 2021
@@ -44,6 +62,7 @@ The compiled binary will be placed under `target/release/`.
 .
 |- Cargo.toml
 |- build.rs
+|- demo_screenshot/
 |- src/
 |  `- main.rs
 `- ui/
