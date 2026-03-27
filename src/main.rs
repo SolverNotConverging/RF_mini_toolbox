@@ -198,9 +198,22 @@ fn main() -> Result<(), slint::PlatformError> {
 
     {
         let weak = app.as_weak();
-        app.on_solve_microstrip(move || {
+        app.on_synthesize_microstrip(move || {
             if let Some(app) = weak.upgrade() {
-                let status = match solve_microstrip(&app) {
+                let status = match synthesize_microstrip(&app) {
+                    Ok(message) => message,
+                    Err(message) => message,
+                };
+                app.set_status_text(status.into());
+            }
+        });
+    }
+
+    {
+        let weak = app.as_weak();
+        app.on_analyze_microstrip(move || {
+            if let Some(app) = weak.upgrade() {
+                let status = match analyze_microstrip(&app) {
                     Ok(message) => message,
                     Err(message) => message,
                 };
@@ -362,19 +375,110 @@ fn convert_reactance_to_component(app: &MainWindow) -> Result<String, String> {
     })
 }
 
-fn solve_microstrip(app: &MainWindow) -> Result<String, String> {
+fn synthesize_microstrip(app: &MainWindow) -> Result<String, String> {
     let er = parse_positive("Relative permittivity", app.get_ms_er())?;
-    let width = parse_positive("Trace width", app.get_ms_width())?
-        * microstrip_length_scale(app.get_ms_dimension_unit());
-    let height = parse_positive("Substrate height", app.get_ms_height())?
-        * microstrip_length_scale(app.get_ms_dimension_unit());
+    let height = parse_positive("Dielectric height", app.get_ms_height())?
+        * microstrip_length_scale(app.get_ms_height_unit());
     let frequency = parse_positive("Frequency", app.get_ms_freq_value())?
         * microstrip_frequency_scale(app.get_ms_freq_unit());
+    let target_z0 = parse_positive("Target impedance Z0", app.get_ms_z0_value())?;
+    let theta_deg = parse_positive("Electrical length", app.get_ms_theta_deg_value())?;
 
+    validate_microstrip_inputs(er, height)?;
+
+    let width = synthesize_microstrip_width(er, height, target_z0)?;
+    let solution = microstrip_solution(er, height, width, frequency)?;
+    let length = solution.guided_wavelength * theta_deg / 360.0;
+
+    sync_microstrip_shared_inputs(app, er, height, frequency);
+    app.set_ms_z0_value(format_number(target_z0).into());
+    app.set_ms_theta_deg_value(format_number(theta_deg).into());
+    app.set_ms_width(
+        format_number(width / microstrip_length_scale(app.get_ms_width_unit())).into(),
+    );
+    app.set_ms_length(
+        format_number(length / microstrip_length_scale(app.get_ms_length_unit())).into(),
+    );
+    app.set_ms_eeff_result(format_number(solution.effective_er).into());
+    app.set_ms_lambda_result(
+        format_number(
+            solution.guided_wavelength / microstrip_length_scale(app.get_ms_length_unit()),
+        )
+        .into(),
+    );
+
+    Ok(format!(
+        "Synthesized microstrip dimensions for Z0 = {} ohm and θ = {} deg.",
+        format_number(target_z0),
+        format_number(theta_deg)
+    ))
+}
+
+fn analyze_microstrip(app: &MainWindow) -> Result<String, String> {
+    let er = parse_positive("Relative permittivity", app.get_ms_er())?;
+    let height = parse_positive("Dielectric height", app.get_ms_height())?
+        * microstrip_length_scale(app.get_ms_height_unit());
+    let frequency = parse_positive("Frequency", app.get_ms_freq_value())?
+        * microstrip_frequency_scale(app.get_ms_freq_unit());
+    let width = parse_positive("Trace width", app.get_ms_width())?
+        * microstrip_length_scale(app.get_ms_width_unit());
+    let length = parse_positive("Trace length", app.get_ms_length())?
+        * microstrip_length_scale(app.get_ms_length_unit());
+
+    validate_microstrip_inputs(er, height)?;
+    let solution = microstrip_solution(er, height, width, frequency)?;
+    let theta_deg = 360.0 * length / solution.guided_wavelength;
+
+    sync_microstrip_shared_inputs(app, er, height, frequency);
+    app.set_ms_width(
+        format_number(width / microstrip_length_scale(app.get_ms_width_unit())).into(),
+    );
+    app.set_ms_length(
+        format_number(length / microstrip_length_scale(app.get_ms_length_unit())).into(),
+    );
+    app.set_ms_z0_value(format_number(solution.z0).into());
+    app.set_ms_theta_deg_value(format_number(theta_deg).into());
+    app.set_ms_eeff_result(format_number(solution.effective_er).into());
+    app.set_ms_lambda_result(
+        format_number(
+            solution.guided_wavelength / microstrip_length_scale(app.get_ms_length_unit()),
+        )
+        .into(),
+    );
+
+    Ok(format!(
+        "Analyzed microstrip dimensions into Z0 = {} ohm and θ = {} deg.",
+        format_number(solution.z0),
+        format_number(theta_deg)
+    ))
+}
+
+struct MicrostripSolution {
+    z0: f64,
+    effective_er: f64,
+    guided_wavelength: f64,
+}
+
+fn validate_microstrip_inputs(er: f64, height: f64) -> Result<(), String> {
     if er <= 1.0 {
         return Err(
             "Relative permittivity should be greater than 1 for a practical microstrip.".into(),
         );
+    }
+    if height <= 0.0 {
+        return Err("Dielectric height must be greater than zero.".into());
+    }
+    Ok(())
+}
+
+fn microstrip_solution(
+    er: f64,
+    height: f64,
+    width: f64,
+    frequency: f64,
+) -> Result<MicrostripSolution, String> {
+    if width <= 0.0 {
+        return Err("Trace width must be greater than zero.".into());
     }
 
     let u = width / height;
@@ -394,27 +498,54 @@ fn solve_microstrip(app: &MainWindow) -> Result<String, String> {
         (120.0 * PI) / (effective_er.sqrt() * (u + 1.393 + 0.667 * (u + 1.444).ln()))
     };
 
-    let guided_wavelength_m = C0 / (frequency * effective_er.sqrt());
-    let lambda_display = guided_wavelength_m / microstrip_length_scale(app.get_ms_dimension_unit());
+    let guided_wavelength = C0 / (frequency * effective_er.sqrt());
 
+    Ok(MicrostripSolution {
+        z0,
+        effective_er,
+        guided_wavelength,
+    })
+}
+
+fn synthesize_microstrip_width(er: f64, height: f64, target_z0: f64) -> Result<f64, String> {
+    let min_width = height * 1.0e-6;
+    let max_width = height * 1.0e4;
+    let probe_frequency = 1.0e9;
+
+    let z0_min = microstrip_solution(er, height, min_width, probe_frequency)?.z0;
+    let z0_max = microstrip_solution(er, height, max_width, probe_frequency)?.z0;
+
+    if target_z0 > z0_min || target_z0 < z0_max {
+        return Err(format!(
+            "Target impedance is outside the supported range for this substrate. Try between {} and {} ohm.",
+            format_number(z0_max),
+            format_number(z0_min)
+        ));
+    }
+
+    let mut low = min_width;
+    let mut high = max_width;
+    for _ in 0..120 {
+        let mid = 0.5 * (low + high);
+        let z0_mid = microstrip_solution(er, height, mid, probe_frequency)?.z0;
+        if z0_mid > target_z0 {
+            low = mid;
+        } else {
+            high = mid;
+        }
+    }
+
+    Ok(0.5 * (low + high))
+}
+
+fn sync_microstrip_shared_inputs(app: &MainWindow, er: f64, height: f64, frequency: f64) {
     app.set_ms_er(format_number(er).into());
-    app.set_ms_width(
-        format_number(width / microstrip_length_scale(app.get_ms_dimension_unit())).into(),
-    );
     app.set_ms_height(
-        format_number(height / microstrip_length_scale(app.get_ms_dimension_unit())).into(),
+        format_number(height / microstrip_length_scale(app.get_ms_height_unit())).into(),
     );
     app.set_ms_freq_value(
         format_number(frequency / microstrip_frequency_scale(app.get_ms_freq_unit())).into(),
     );
-    app.set_ms_z0_result(format_number(z0).into());
-    app.set_ms_eeff_result(format_number(effective_er).into());
-    app.set_ms_lambda_result(format_number(lambda_display).into());
-
-    Ok(format!(
-        "Calculated microstrip impedance with Hammerstad-Jensen equations: Z0 = {} ohm.",
-        format_number(z0)
-    ))
 }
 
 fn read_matrix_input(app: &MainWindow) -> Result<Matrix2, String> {

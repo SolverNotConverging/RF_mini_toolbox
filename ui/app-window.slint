@@ -38,6 +38,8 @@ component InputCard inherits Rectangle {
     in-out property <string> value_text;
 
     min-height: 76px;
+    max-height: 76px;
+    vertical-stretch: 0;
     border-radius: 14px;
     border-width: 1px;
     border-color: #dbe5f2;
@@ -78,6 +80,8 @@ component ComboInputCard inherits Rectangle {
     in-out property <int> unit_index;
 
     min-height: 76px;
+    max-height: 76px;
+    vertical-stretch: 0;
     border-radius: 14px;
     border-width: 1px;
     border-color: #dbe5f2;
@@ -371,12 +375,16 @@ export component MainWindow inherits Window {
     in-out property <string> react_impedance_text: "j62.831853 ohm";
 
     in-out property <string> ms_er: "4.3";
-    in-out property <string> ms_width: "3";
     in-out property <string> ms_height: "1.6";
-    in-out property <int> ms_dimension_unit: 2;
+    in-out property <int> ms_height_unit: 2;
     in-out property <string> ms_freq_value: "2.4";
     in-out property <int> ms_freq_unit: 1;
-    in-out property <string> ms_z0_result: "0";
+    in-out property <string> ms_z0_value: "50";
+    in-out property <string> ms_theta_deg_value: "90";
+    in-out property <string> ms_width: "3";
+    in-out property <int> ms_width_unit: 2;
+    in-out property <string> ms_length: "10";
+    in-out property <int> ms_length_unit: 2;
     in-out property <string> ms_eeff_result: "0";
     in-out property <string> ms_lambda_result: "0";
 
@@ -386,7 +394,8 @@ export component MainWindow inherits Window {
     callback matrix_use_output;
     callback component_to_reactance;
     callback reactance_to_component;
-    callback solve_microstrip;
+    callback synthesize_microstrip;
+    callback analyze_microstrip;
 
     private property <[string]> general_frequency_units: ["Hz", "kHz", "MHz", "GHz", "THz"];
     private property <[string]> wavelength_units: ["um", "mm", "cm", "m"];
@@ -440,7 +449,7 @@ export component MainWindow inherits Window {
                         horizontal-stretch: 1;
 
                         ToolTab {
-                            text: "Freq ↔ Lambda";
+                            text: "Frequency ↔ Wavelength";
                             selected: root.current_tool == 0;
                             clicked => {
                                 root.current_tool = 0;
@@ -522,6 +531,11 @@ export component MainWindow inherits Window {
                                         text: "Frequency and wavelength conversion across selectable RF units.";
                                         color: #60758d;
                                         font-size: 13px;
+                                    }
+
+                                    Rectangle {
+                                        height: 170px;
+                                        background: transparent;
                                     }
 
                                     HorizontalLayout {
@@ -848,7 +862,7 @@ export component MainWindow inherits Window {
                                     spacing: 16px;
 
                                     Text {
-                                        text: "Hammerstad-Jensen estimate for characteristic impedance, effective permittivity, and guided wavelength.";
+                                        text: "Shared substrate inputs on top, then synthesize from Z0 and electrical length or analyze from physical width and length.";
                                         color: #60758d;
                                         font-size: 13px;
                                     }
@@ -858,15 +872,16 @@ export component MainWindow inherits Window {
 
                                         InputCard {
                                             horizontal-stretch: 1;
-                                            label_text: "Relative permittivity εr";
+                                            label_text: "Dielectric constant εr";
                                             value_text <=> root.ms_er;
                                         }
 
-                                        SelectorCard {
-                                            width: 190px;
-                                            label_text: "Geometry unit";
-                                            option_model: root.microstrip_length_units;
-                                            current_index <=> root.ms_dimension_unit;
+                                        ComboInputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Dielectric height H";
+                                            value_text <=> root.ms_height;
+                                            unit_model: root.microstrip_length_units;
+                                            unit_index <=> root.ms_height_unit;
                                         }
 
                                         ComboInputCard {
@@ -879,25 +894,92 @@ export component MainWindow inherits Window {
                                     }
 
                                     HorizontalLayout {
-                                        spacing: 12px;
+                                        spacing: 16px;
 
-                                        InputCard {
+                                        Rectangle {
                                             horizontal-stretch: 1;
-                                            label_text: "Trace width";
-                                            value_text <=> root.ms_width;
+                                            border-radius: 16px;
+                                            border-width: 1px;
+                                            border-color: #dbe5f2;
+                                            background: #f9fbfe;
+
+                                            VerticalLayout {
+                                                padding: 14px;
+                                                spacing: 12px;
+
+                                                Text {
+                                                    text: "Electrical Parameters";
+                                                    color: #153968;
+                                                    font-weight: 700;
+                                                }
+
+                                                InputCard {
+                                                    label_text: "Target / result Z0 (ohm)";
+                                                    value_text <=> root.ms_z0_value;
+                                                }
+
+                                                InputCard {
+                                                    label_text: "Electrical length (deg)";
+                                                    value_text <=> root.ms_theta_deg_value;
+                                                }
+                                            }
                                         }
 
-                                        InputCard {
-                                            horizontal-stretch: 1;
-                                            label_text: "Substrate height";
-                                            value_text <=> root.ms_height;
-                                        }
-                                    }
+                                        Rectangle {
+                                            width: 200px;
+                                            background: transparent;
 
-                                    Button {
-                                        text: "Solve Microstrip";
-                                        clicked => {
-                                            root.solve_microstrip();
+                                            VerticalLayout {
+                                                padding-top: 40px;
+                                                spacing: 12px;
+
+                                                Button {
+                                                    text: "Synthesize";
+                                                    clicked => {
+                                                        root.synthesize_microstrip();
+                                                    }
+                                                }
+
+                                                Button {
+                                                    text: "Analyze";
+                                                    clicked => {
+                                                        root.analyze_microstrip();
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            horizontal-stretch: 1;
+                                            border-radius: 16px;
+                                            border-width: 1px;
+                                            border-color: #dbe5f2;
+                                            background: #f9fbfe;
+
+                                            VerticalLayout {
+                                                padding: 14px;
+                                                spacing: 12px;
+
+                                                Text {
+                                                    text: "Physical Parameters";
+                                                    color: #153968;
+                                                    font-weight: 700;
+                                                }
+
+                                                ComboInputCard {
+                                                    label_text: "Width W";
+                                                    value_text <=> root.ms_width;
+                                                    unit_model: root.microstrip_length_units;
+                                                    unit_index <=> root.ms_width_unit;
+                                                }
+
+                                                ComboInputCard {
+                                                    label_text: "Length L";
+                                                    value_text <=> root.ms_length;
+                                                    unit_model: root.microstrip_length_units;
+                                                    unit_index <=> root.ms_length_unit;
+                                                }
+                                            }
                                         }
                                     }
 
@@ -906,23 +988,16 @@ export component MainWindow inherits Window {
 
                                         ReadoutCard {
                                             horizontal-stretch: 1;
-                                            label_text: "Characteristic impedance Z0";
-                                            value_text: root.ms_z0_result + " ohm";
-                                            footnote_text: "Quasi-static result";
-                                        }
-
-                                        ReadoutCard {
-                                            horizontal-stretch: 1;
                                             label_text: "Effective permittivity εeff";
                                             value_text: root.ms_eeff_result;
-                                            footnote_text: "Used for guided-wave estimate";
+                                            footnote_text: "Used for impedance and phase estimates";
                                         }
 
                                         ReadoutCard {
                                             horizontal-stretch: 1;
                                             label_text: "Guided wavelength";
                                             value_text: root.ms_lambda_result;
-                                            footnote_text: "Shown in the selected geometry unit";
+                                            footnote_text: "Shown in the length unit used for L";
                                         }
                                     }
                                 }
@@ -1043,7 +1118,7 @@ export component MainWindow inherits Window {
                                 }
 
                                 if root.current_tool == 3 : Rectangle {
-                                    height: 290px;
+                                    height: 320px;
                                     border-radius: 16px;
                                     background: #f7fbff;
 
@@ -1064,13 +1139,13 @@ export component MainWindow inherits Window {
                                         }
 
                                         Text {
-                                            text: "This panel estimates Z0 and εeff from width, substrate height, and dielectric constant.";
+                                            text: "Enter εr, substrate height H, and frequency once, then choose which side of the problem you want to solve.";
                                             color: #496177;
                                             wrap: word-wrap;
                                         }
 
                                         Text {
-                                            text: "The same geometry unit is reused for width, height, and the guided wavelength result.";
+                                            text: "Synthesize maps Z0 and electrical length to W and L. Analyze goes the other direction.";
                                             color: #496177;
                                             wrap: word-wrap;
                                         }
@@ -1090,11 +1165,13 @@ export component MainWindow inherits Window {
                     padding-left: 16px;
                     padding-right: 16px;
                     spacing: 12px;
+                    alignment: center;
 
                     Text {
                         text: root.current_tool_name;
                         color: #dbe9fb;
                         font-weight: 700;
+                        vertical-alignment: center;
                     }
 
                     Rectangle {
