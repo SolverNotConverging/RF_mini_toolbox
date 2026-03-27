@@ -1,187 +1,1111 @@
 import {
-    LineEdit,
     Button,
+    CheckBox,
+    ComboBox,
+    LineEdit,
+    ScrollView,
 } from "std-widgets.slint";
 
-component LabeledInput inherits Rectangle {
-    in property <string> label_text;
-    in property <string> unit_text;
-    in-out property <string> text_value;
+component ToolTab inherits Rectangle {
+    in property <string> text;
+    in property <bool> selected: false;
+    callback clicked;
 
-    background: transparent;
+    min-width: 138px;
     min-height: 42px;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: selected ? #3b7bd6 : #cdd8e5;
+    background: selected ? #153968 : #eef4fb;
 
-    HorizontalLayout {
-        padding-left: 4px;
-        padding-right: 4px;
-        spacing: 10px;
-        alignment: start;
+    Text {
+        text: root.text;
+        color: root.selected ? #ffffff : #1f3552;
+        font-weight: root.selected ? 700 : 600;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+}
+
+component InputCard inherits Rectangle {
+    in property <string> label_text;
+    in-out property <string> value_text;
+
+    min-height: 76px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: #dbe5f2;
+    background: #f8fbff;
+
+    VerticalLayout {
+        padding: 10px;
+        spacing: 6px;
 
         Text {
-            text: label_text;
-            min-width: 90px;
-            vertical-alignment: center;
+            text: root.label_text;
+            color: #5b6f87;
+            font-size: 12px;
         }
 
         Rectangle {
-            border-color: #c8ccd4;
+            height: 34px;
+            border-radius: 8px;
             border-width: 1px;
-            border-radius: 6px;
-            background: white;
-            min-width: 120px;
-            height: 32px;
+            border-color: #cad6e6;
+            background: #ffffff;
 
             LineEdit {
-                text <=> text_value;
-                x: 8px;
-                y: 6px;
-                width: parent.width - 16px;
-                height: parent.height - 12px;
+                text <=> root.value_text;
+                x: 10px;
+                y: 7px;
+                width: parent.width - 20px;
+                height: parent.height - 14px;
             }
+        }
+    }
+}
+
+component ComboInputCard inherits Rectangle {
+    in property <string> label_text;
+    in-out property <string> value_text;
+    in property <[string]> unit_model;
+    in-out property <int> unit_index;
+
+    min-height: 76px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: #dbe5f2;
+    background: #f8fbff;
+
+    VerticalLayout {
+        padding: 10px;
+        spacing: 6px;
+
+        Text {
+            text: root.label_text;
+            color: #5b6f87;
+            font-size: 12px;
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+
+            Rectangle {
+                horizontal-stretch: 1;
+                height: 34px;
+                border-radius: 8px;
+                border-width: 1px;
+                border-color: #cad6e6;
+                background: #ffffff;
+
+                LineEdit {
+                    text <=> root.value_text;
+                    x: 10px;
+                    y: 7px;
+                    width: parent.width - 20px;
+                    height: parent.height - 14px;
+                }
+            }
+
+            ComboBox {
+                min-width: 96px;
+                model: root.unit_model;
+                current-index <=> root.unit_index;
+            }
+        }
+    }
+}
+
+component SelectorCard inherits Rectangle {
+    in property <string> label_text;
+    in property <[string]> option_model;
+    in-out property <int> current_index;
+
+    min-height: 76px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: #dbe5f2;
+    background: #f8fbff;
+
+    VerticalLayout {
+        padding: 10px;
+        spacing: 6px;
+
+        Text {
+            text: root.label_text;
+            color: #5b6f87;
+            font-size: 12px;
+        }
+
+        ComboBox {
+            model: root.option_model;
+            current-index <=> root.current_index;
+        }
+    }
+}
+
+component ReadoutCard inherits Rectangle {
+    in property <string> label_text;
+    in property <string> value_text;
+    in property <string> footnote_text: "";
+
+    min-height: 88px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: #d6e0ec;
+    background: #f4f8fc;
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 6px;
+
+        Text {
+            text: root.label_text;
+            color: #5b6f87;
+            font-size: 12px;
         }
 
         Text {
-            text: unit_text;
-            min-width: 35px;
-            vertical-alignment: center;
-            color: #666666;
+            text: root.value_text;
+            color: #153968;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        if root.footnote_text != "" : Text {
+            text: root.footnote_text;
+            color: #6d7f95;
+            font-size: 11px;
+        }
+    }
+}
+
+component MatrixInputCell inherits Rectangle {
+    in property <string> title_text;
+    in-out property <string> re_text;
+    in-out property <string> im_text;
+
+    min-width: 180px;
+    min-height: 116px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: #dbe5f2;
+    background: #fbfdff;
+
+    VerticalLayout {
+        padding: 10px;
+        spacing: 8px;
+
+        Text {
+            text: root.title_text;
+            color: #42576f;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+
+            Rectangle {
+                horizontal-stretch: 1;
+                height: 32px;
+                border-radius: 8px;
+                border-width: 1px;
+                border-color: #cad6e6;
+                background: #ffffff;
+
+                LineEdit {
+                    text <=> root.re_text;
+                    x: 8px;
+                    y: 6px;
+                    width: parent.width - 16px;
+                    height: parent.height - 12px;
+                }
+            }
+
+            Text {
+                text: "Re";
+                min-width: 20px;
+                vertical-alignment: center;
+                color: #6d7f95;
+            }
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+
+            Rectangle {
+                horizontal-stretch: 1;
+                height: 32px;
+                border-radius: 8px;
+                border-width: 1px;
+                border-color: #cad6e6;
+                background: #ffffff;
+
+                LineEdit {
+                    text <=> root.im_text;
+                    x: 8px;
+                    y: 6px;
+                    width: parent.width - 16px;
+                    height: parent.height - 12px;
+                }
+            }
+
+            Text {
+                text: "Im";
+                min-width: 20px;
+                vertical-alignment: center;
+                color: #6d7f95;
+            }
+        }
+    }
+}
+
+component MatrixReadoutCell inherits Rectangle {
+    in property <string> title_text;
+    in property <string> re_text;
+    in property <string> im_text;
+
+    min-width: 180px;
+    min-height: 116px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: #d6e0ec;
+    background: #f4f8fc;
+
+    VerticalLayout {
+        padding: 10px;
+        spacing: 8px;
+
+        Text {
+            text: root.title_text;
+            color: #42576f;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        Rectangle {
+            height: 32px;
+            border-radius: 8px;
+            background: #ffffff;
+            border-width: 1px;
+            border-color: #d9e3ee;
+
+            Text {
+                text: root.re_text;
+                color: #153968;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+
+        Rectangle {
+            height: 32px;
+            border-radius: 8px;
+            background: #ffffff;
+            border-width: 1px;
+            border-color: #d9e3ee;
+
+            Text {
+                text: root.im_text;
+                color: #153968;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
         }
     }
 }
 
 export component MainWindow inherits Window {
-    width: 600px;
-    height: 300px;
-    title: "RF Wavelength Calculator";
+    width: 1260px;
+    height: 860px;
+    title: "RF Mini Toolbox";
 
-    in-out property <string> eps_r_str: "1.000";
-    in-out property <string> mu_r_str: "1.000";
-    in-out property <string> freq_str: "1.000";
-    in-out property <string> lambda_str: "300.000";
+    in-out property <int> current_tool: 0;
+    in-out property <string> current_tool_name: "Frequency / Wavelength";
+    in-out property <string> status_text: "Ready for RF calculations.";
+    in-out property <bool> sidebar_visible: true;
 
-    property <float> eps_r;
-    property <float> mu_r;
-    property <float> freq;
-    property <float> lambda;
+    in-out property <string> wl_eps_r: "1";
+    in-out property <string> wl_mu_r: "1";
+    in-out property <string> wl_freq_value: "1";
+    in-out property <int> wl_freq_unit: 3;
+    in-out property <string> wl_lambda_value: "299.792458";
+    in-out property <int> wl_lambda_unit: 1;
+
+    in-out property <int> matrix_from_type: 0;
+    in-out property <int> matrix_to_type: 3;
+    in-out property <string> matrix_z0: "50";
+    in-out property <string> mx_in_11_re: "1";
+    in-out property <string> mx_in_11_im: "0";
+    in-out property <string> mx_in_12_re: "0";
+    in-out property <string> mx_in_12_im: "0";
+    in-out property <string> mx_in_21_re: "0";
+    in-out property <string> mx_in_21_im: "0";
+    in-out property <string> mx_in_22_re: "1";
+    in-out property <string> mx_in_22_im: "0";
+    in-out property <string> mx_out_11_re: "0";
+    in-out property <string> mx_out_11_im: "0";
+    in-out property <string> mx_out_12_re: "0";
+    in-out property <string> mx_out_12_im: "0";
+    in-out property <string> mx_out_21_re: "0";
+    in-out property <string> mx_out_21_im: "0";
+    in-out property <string> mx_out_22_re: "0";
+    in-out property <string> mx_out_22_im: "0";
+
+    in-out property <int> react_kind: 0;
+    in-out property <string> react_freq_value: "1";
+    in-out property <int> react_freq_unit: 1;
+    in-out property <string> react_inductance_value: "10";
+    in-out property <int> react_inductance_unit: 3;
+    in-out property <string> react_capacitance_value: "1";
+    in-out property <int> react_capacitance_unit: 4;
+    in-out property <string> react_x_value: "62.831853";
+    in-out property <int> react_x_unit: 0;
+    in-out property <string> react_impedance_text: "j62.831853 ohm";
+
+    in-out property <string> ms_er: "4.3";
+    in-out property <string> ms_width: "3";
+    in-out property <string> ms_height: "1.6";
+    in-out property <int> ms_dimension_unit: 2;
+    in-out property <string> ms_freq_value: "2.4";
+    in-out property <int> ms_freq_unit: 1;
+    in-out property <string> ms_z0_result: "0";
+    in-out property <string> ms_eeff_result: "0";
+    in-out property <string> ms_lambda_result: "0";
+
+    callback freq_to_lambda;
+    callback lambda_to_freq;
+    callback convert_matrix;
+    callback matrix_use_output;
+    callback component_to_reactance;
+    callback reactance_to_component;
+    callback solve_microstrip;
+
+    private property <[string]> general_frequency_units: ["Hz", "kHz", "MHz", "GHz", "THz"];
+    private property <[string]> wavelength_units: ["um", "mm", "cm", "m"];
+    private property <[string]> matrix_type_model: ["ABCD", "Z", "Y", "S"];
+    private property <[string]> react_frequency_units: ["MHz", "GHz", "THz"];
+    private property <[string]> inductance_units: ["H", "mH", "uH", "nH", "pH"];
+    private property <[string]> capacitance_units: ["F", "mF", "uF", "nF", "pF"];
+    private property <[string]> reactance_units: ["ohm", "kohm", "Mohm"];
+    private property <[string]> microstrip_length_units: ["um", "mil", "mm", "cm", "inch"];
+    private property <[string]> microstrip_frequency_units: ["MHz", "GHz", "THz"];
 
     Rectangle {
-        background: #eef2f7;
-
-        Rectangle {
-            width: 600px;
-            height: 260px;
-            x: (parent.width - self.width) / 2;
-            y: 40px;
-
-            background: #ffffff;
-            border-color: #d6dbe4;
-            border-width: 1px;
-            border-radius: 12px;
-
-            Rectangle {
-                min-width: 16px;
-                min-height: 16px; /* @lsp:ignore-node */ }
-        }
+        background: #e8eef5;
 
         VerticalLayout {
-            padding: 18px;
-            spacing: 16px;
+            spacing: 0;
 
-            VerticalLayout {
-                spacing: 4px;
+            Rectangle {
+                height: 82px;
+                background: #f8fbff;
+                border-width: 1px;
+                border-color: #d4dfec;
 
-                Text {
-                    text: "Convert between frequency (GHz) and wavelength (mm)";
-                    color: #667085;
-                    font-size: 12px;
-                }
+                HorizontalLayout {
+                    padding-left: 18px;
+                    padding-right: 18px;
+                    padding-top: 14px;
+                    padding-bottom: 14px;
+                    spacing: 16px;
 
-                Text {
-                    text: "RF Medium Calculator";
-                    font-size: 20px;
-                    font-weight: 700;
-                    color: #1f2937;
-                }
-            }
+                    VerticalLayout {
+                        width: 210px;
+                        spacing: 2px;
 
-            HorizontalLayout {
-                spacing: 24px;
+                        Text {
+                            text: "RF Mini Toolbox";
+                            font-size: 24px;
+                            font-weight: 700;
+                            color: #153968;
+                        }
 
-                VerticalLayout {
-                    spacing: 10px;
-                    horizontal-stretch: 1;
-
-                    LabeledInput {
-                        label_text: "εr";
-                        unit_text: "";
-                        text_value <=> eps_r_str;
+                        Text {
+                            text: "Converters, 2-port matrices, reactance, and microstrip estimates";
+                            color: #60758d;
+                            font-size: 12px;
+                        }
                     }
 
-                    LabeledInput {
-                        label_text: "Frequency";
-                        unit_text: "GHz";
-                        text_value <=> freq_str;
+                    HorizontalLayout {
+                        spacing: 10px;
+                        horizontal-stretch: 1;
+
+                        ToolTab {
+                            text: "Freq ↔ Lambda";
+                            selected: root.current_tool == 0;
+                            clicked => {
+                                root.current_tool = 0;
+                                root.current_tool_name = "Frequency / Wavelength";
+                                root.status_text = "Frequency / wavelength tool selected.";
+                            }
+                        }
+
+                        ToolTab {
+                            text: "ABCD / Z / Y / S";
+                            selected: root.current_tool == 1;
+                            clicked => {
+                                root.current_tool = 1;
+                                root.current_tool_name = "2-Port Matrix Converter";
+                                root.status_text = "2-port matrix converter selected.";
+                            }
+                        }
+
+                        ToolTab {
+                            text: "L / C ↔ Reactance";
+                            selected: root.current_tool == 2;
+                            clicked => {
+                                root.current_tool = 2;
+                                root.current_tool_name = "Reactance / Impedance";
+                                root.status_text = "Reactance and impedance tool selected.";
+                            }
+                        }
+
+                        ToolTab {
+                            text: "Microstrip";
+                            selected: root.current_tool == 3;
+                            clicked => {
+                                root.current_tool = 3;
+                                root.current_tool_name = "Microstrip Impedance";
+                                root.status_text = "Microstrip impedance calculator selected.";
+                            }
+                        }
                     }
-                }
 
-                VerticalLayout {
-                    spacing: 10px;
-                    horizontal-stretch: 1;
+                    Rectangle {
+                        width: 180px;
+                        background: transparent;
 
-                    LabeledInput {
-                        label_text: "μr";
-                        unit_text: "";
-                        text_value <=> mu_r_str;
-                    }
-
-                    LabeledInput {
-                        label_text: "Wavelength";
-                        unit_text: "mm";
-                        text_value <=> lambda_str;
+                        CheckBox {
+                            x: 16px;
+                            y: 25px;
+                            text: "Show Sidebar";
+                            checked <=> root.sidebar_visible;
+                        }
                     }
                 }
             }
 
             Rectangle {
-                height: 1px;
-                background: #e5e7eb;
-            }
+                background: #e8eef5;
+                vertical-stretch: 1;
 
-            HorizontalLayout {
-                spacing: 12px;
-                alignment: center;
+                HorizontalLayout {
+                    padding: 16px;
+                    spacing: 14px;
 
-                Button {
-                    min-width: 160px;
-                    text: "Convert f → λ";
-                    clicked => {
-                        eps_r = eps_r_str.to-float();
-                        mu_r = mu_r_str.to-float();
-                        freq = freq_str.to-float();
+                    Rectangle {
+                        horizontal-stretch: 1;
+                        border-radius: 18px;
+                        border-width: 1px;
+                        border-color: #d3deec;
+                        background: #ffffff;
+                        clip: true;
 
-                        lambda = 300 / (freq * sqrt(eps_r * mu_r));
+                        ScrollView {
+                            VerticalLayout {
+                                padding: 20px;
+                                spacing: 18px;
 
-                        eps_r_str = eps_r.to-fixed(3);
-                        mu_r_str = mu_r.to-fixed(3);
-                        freq_str = freq.to-fixed(3);
-                        lambda_str = lambda.to-fixed(3);
+                                if root.current_tool == 0 : VerticalLayout {
+                                    spacing: 16px;
+
+                                    Text {
+                                        text: "Frequency and wavelength conversion across selectable RF units.";
+                                        color: #60758d;
+                                        font-size: 13px;
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 12px;
+
+                                        InputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Relative permittivity εr";
+                                            value_text <=> root.wl_eps_r;
+                                        }
+
+                                        InputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Relative permeability μr";
+                                            value_text <=> root.wl_mu_r;
+                                        }
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 12px;
+
+                                        ComboInputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Frequency";
+                                            value_text <=> root.wl_freq_value;
+                                            unit_model: root.general_frequency_units;
+                                            unit_index <=> root.wl_freq_unit;
+                                        }
+
+                                        ComboInputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Wavelength";
+                                            value_text <=> root.wl_lambda_value;
+                                            unit_model: root.wavelength_units;
+                                            unit_index <=> root.wl_lambda_unit;
+                                        }
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 12px;
+
+                                        Button {
+                                            text: "Convert f to λ";
+                                            clicked => {
+                                                root.freq_to_lambda();
+                                            }
+                                        }
+
+                                        Button {
+                                            text: "Convert λ to f";
+                                            clicked => {
+                                                root.lambda_to_freq();
+                                            }
+                                        }
+                                    }
+
+                                    ReadoutCard {
+                                        label_text: "Medium relation";
+                                        value_text: "lambda = c / (f * sqrt(εr * μr))";
+                                        footnote_text: "Units are handled by the dropdowns before the calculation runs.";
+                                    }
+                                }
+
+                                if root.current_tool == 1 : VerticalLayout {
+                                    spacing: 16px;
+
+                                    Text {
+                                        text: "Convert a 2-port network between ABCD, impedance, admittance, and scattering matrices.";
+                                        color: #60758d;
+                                        font-size: 13px;
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 12px;
+
+                                        SelectorCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Input matrix";
+                                            option_model: root.matrix_type_model;
+                                            current_index <=> root.matrix_from_type;
+                                        }
+
+                                        SelectorCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Output matrix";
+                                            option_model: root.matrix_type_model;
+                                            current_index <=> root.matrix_to_type;
+                                        }
+
+                                        InputCard {
+                                            width: 180px;
+                                            label_text: "Reference impedance Z0 (ohm)";
+                                            value_text <=> root.matrix_z0;
+                                        }
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 16px;
+
+                                        Rectangle {
+                                            horizontal-stretch: 1;
+                                            border-radius: 16px;
+                                            border-width: 1px;
+                                            border-color: #dbe5f2;
+                                            background: #f9fbfe;
+
+                                            VerticalLayout {
+                                                padding: 14px;
+                                                spacing: 12px;
+
+                                                Text {
+                                                    text: "Input Matrix";
+                                                    color: #153968;
+                                                    font-weight: 700;
+                                                }
+
+                                                HorizontalLayout {
+                                                    spacing: 10px;
+
+                                                    MatrixInputCell {
+                                                        horizontal-stretch: 1;
+                                                        title_text: "M11";
+                                                        re_text <=> root.mx_in_11_re;
+                                                        im_text <=> root.mx_in_11_im;
+                                                    }
+
+                                                    MatrixInputCell {
+                                                        horizontal-stretch: 1;
+                                                        title_text: "M12";
+                                                        re_text <=> root.mx_in_12_re;
+                                                        im_text <=> root.mx_in_12_im;
+                                                    }
+                                                }
+
+                                                HorizontalLayout {
+                                                    spacing: 10px;
+
+                                                    MatrixInputCell {
+                                                        horizontal-stretch: 1;
+                                                        title_text: "M21";
+                                                        re_text <=> root.mx_in_21_re;
+                                                        im_text <=> root.mx_in_21_im;
+                                                    }
+
+                                                    MatrixInputCell {
+                                                        horizontal-stretch: 1;
+                                                        title_text: "M22";
+                                                        re_text <=> root.mx_in_22_re;
+                                                        im_text <=> root.mx_in_22_im;
+                                                    }
+                                                }
+
+                                                Button {
+                                                    text: "Convert Matrix";
+                                                    clicked => {
+                                                        root.convert_matrix();
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            horizontal-stretch: 1;
+                                            border-radius: 16px;
+                                            border-width: 1px;
+                                            border-color: #dbe5f2;
+                                            background: #f9fbfe;
+
+                                            VerticalLayout {
+                                                padding: 14px;
+                                                spacing: 12px;
+
+                                                Text {
+                                                    text: "Output Matrix";
+                                                    color: #153968;
+                                                    font-weight: 700;
+                                                }
+
+                                                HorizontalLayout {
+                                                    spacing: 10px;
+
+                                                    MatrixReadoutCell {
+                                                        horizontal-stretch: 1;
+                                                        title_text: "M11";
+                                                        re_text: root.mx_out_11_re;
+                                                        im_text: root.mx_out_11_im;
+                                                    }
+
+                                                    MatrixReadoutCell {
+                                                        horizontal-stretch: 1;
+                                                        title_text: "M12";
+                                                        re_text: root.mx_out_12_re;
+                                                        im_text: root.mx_out_12_im;
+                                                    }
+                                                }
+
+                                                HorizontalLayout {
+                                                    spacing: 10px;
+
+                                                    MatrixReadoutCell {
+                                                        horizontal-stretch: 1;
+                                                        title_text: "M21";
+                                                        re_text: root.mx_out_21_re;
+                                                        im_text: root.mx_out_21_im;
+                                                    }
+
+                                                    MatrixReadoutCell {
+                                                        horizontal-stretch: 1;
+                                                        title_text: "M22";
+                                                        re_text: root.mx_out_22_re;
+                                                        im_text: root.mx_out_22_im;
+                                                    }
+                                                }
+
+                                                Button {
+                                                    text: "Use Output as Input";
+                                                    clicked => {
+                                                        root.matrix_use_output();
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if root.current_tool == 2 : VerticalLayout {
+                                    spacing: 16px;
+
+                                    Text {
+                                        text: "Convert L or C into reactance and show the corresponding imaginary impedance.";
+                                        color: #60758d;
+                                        font-size: 13px;
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 10px;
+
+                                        ToolTab {
+                                            text: "Inductor";
+                                            selected: root.react_kind == 0;
+                                            clicked => {
+                                                root.react_kind = 0;
+                                                root.status_text = "Inductive reactance mode selected.";
+                                            }
+                                        }
+
+                                        ToolTab {
+                                            text: "Capacitor";
+                                            selected: root.react_kind == 1;
+                                            clicked => {
+                                                root.react_kind = 1;
+                                                root.status_text = "Capacitive reactance mode selected.";
+                                            }
+                                        }
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 12px;
+
+                                        ComboInputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Frequency";
+                                            value_text <=> root.react_freq_value;
+                                            unit_model: root.react_frequency_units;
+                                            unit_index <=> root.react_freq_unit;
+                                        }
+
+                                        if root.react_kind == 0 : ComboInputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Inductance";
+                                            value_text <=> root.react_inductance_value;
+                                            unit_model: root.inductance_units;
+                                            unit_index <=> root.react_inductance_unit;
+                                        }
+
+                                        if root.react_kind == 1 : ComboInputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Capacitance";
+                                            value_text <=> root.react_capacitance_value;
+                                            unit_model: root.capacitance_units;
+                                            unit_index <=> root.react_capacitance_unit;
+                                        }
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 12px;
+
+                                        ComboInputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Reactance magnitude";
+                                            value_text <=> root.react_x_value;
+                                            unit_model: root.reactance_units;
+                                            unit_index <=> root.react_x_unit;
+                                        }
+
+                                        ReadoutCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Imaginary impedance";
+                                            value_text: root.react_impedance_text;
+                                            footnote_text: root.react_kind == 0 ? "Positive imaginary impedance" : "Negative imaginary impedance";
+                                        }
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 12px;
+
+                                        Button {
+                                            text: root.react_kind == 0 ? "L to X" : "C to X";
+                                            clicked => {
+                                                root.component_to_reactance();
+                                            }
+                                        }
+
+                                        Button {
+                                            text: root.react_kind == 0 ? "X to L" : "X to C";
+                                            clicked => {
+                                                root.reactance_to_component();
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if root.current_tool == 3 : VerticalLayout {
+                                    spacing: 16px;
+
+                                    Text {
+                                        text: "Hammerstad-Jensen estimate for characteristic impedance, effective permittivity, and guided wavelength.";
+                                        color: #60758d;
+                                        font-size: 13px;
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 12px;
+
+                                        InputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Relative permittivity εr";
+                                            value_text <=> root.ms_er;
+                                        }
+
+                                        SelectorCard {
+                                            width: 190px;
+                                            label_text: "Geometry unit";
+                                            option_model: root.microstrip_length_units;
+                                            current_index <=> root.ms_dimension_unit;
+                                        }
+
+                                        ComboInputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Frequency";
+                                            value_text <=> root.ms_freq_value;
+                                            unit_model: root.microstrip_frequency_units;
+                                            unit_index <=> root.ms_freq_unit;
+                                        }
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 12px;
+
+                                        InputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Trace width";
+                                            value_text <=> root.ms_width;
+                                        }
+
+                                        InputCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Substrate height";
+                                            value_text <=> root.ms_height;
+                                        }
+                                    }
+
+                                    Button {
+                                        text: "Solve Microstrip";
+                                        clicked => {
+                                            root.solve_microstrip();
+                                        }
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 12px;
+
+                                        ReadoutCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Characteristic impedance Z0";
+                                            value_text: root.ms_z0_result + " ohm";
+                                            footnote_text: "Quasi-static result";
+                                        }
+
+                                        ReadoutCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Effective permittivity εeff";
+                                            value_text: root.ms_eeff_result;
+                                            footnote_text: "Used for guided-wave estimate";
+                                        }
+
+                                        ReadoutCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Guided wavelength";
+                                            value_text: root.ms_lambda_result;
+                                            footnote_text: "Shown in the selected geometry unit";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if root.sidebar_visible : Rectangle {
+                        width: 290px;
+                        border-radius: 18px;
+                        border-width: 1px;
+                        border-color: #d3deec;
+                        background: #ffffff;
+
+                        ScrollView {
+                            VerticalLayout {
+                                padding: 18px;
+                                spacing: 16px;
+
+                                Text {
+                                    text: root.current_tool_name;
+                                    color: #153968;
+                                    font-size: 22px;
+                                    font-weight: 700;
+                                }
+
+                                if root.current_tool == 0 : Rectangle {
+                                    height: 142px;
+                                    border-radius: 16px;
+                                    background: #eff6ff;
+
+                                    VerticalLayout {
+                                        padding: 14px;
+                                        spacing: 8px;
+
+                                        Text {
+                                            text: "Quick Notes";
+                                            color: #153968;
+                                            font-weight: 700;
+                                        }
+
+                                        Text {
+                                            text: "Use εr and μr to model propagation in dielectrics, ferrites, or free space.";
+                                            color: #496177;
+                                            wrap: word-wrap;
+                                        }
+
+                                        Text {
+                                            text: "The dropdowns let you mix RF frequency units with micron-to-meter wavelength units.";
+                                            color: #496177;
+                                            wrap: word-wrap;
+                                        }
+                                    }
+                                }
+
+                                if root.current_tool == 1 : Rectangle {
+                                    height: 170px;
+                                    border-radius: 16px;
+                                    background: #f7f9fd;
+
+                                    VerticalLayout {
+                                        padding: 14px;
+                                        spacing: 8px;
+
+                                        Text {
+                                            text: "Complex Entries";
+                                            color: #153968;
+                                            font-weight: 700;
+                                        }
+
+                                        Text {
+                                            text: "Each matrix element is entered as separate real and imaginary parts.";
+                                            color: #496177;
+                                            wrap: word-wrap;
+                                        }
+
+                                        Text {
+                                            text: "Z0 is used whenever S-parameters are involved, so 50 ohm stays a sensible default.";
+                                            color: #496177;
+                                            wrap: word-wrap;
+                                        }
+                                    }
+                                }
+
+                                if root.current_tool == 2 : Rectangle {
+                                    height: 240px;
+                                    border-radius: 16px;
+                                    background: #f7fbff;
+
+                                    VerticalLayout {
+                                        padding: 14px;
+                                        spacing: 10px;
+
+                                        Text {
+                                            text: "Reactive Elements";
+                                            color: #153968;
+                                            font-weight: 700;
+                                        }
+
+                                        if root.react_kind == 0 : Image {
+                                            height: 92px;
+                                            image-fit: contain;
+                                            source: @image-url("symbols/Inductor_symbol.png");
+                                        }
+
+                                        if root.react_kind == 1 : Image {
+                                            height: 92px;
+                                            image-fit: contain;
+                                            source: @image-url("symbols/capacitor_symbol.png");
+                                        }
+
+                                        Text {
+                                            text: root.react_kind == 0 ? "Inductive impedance is +jX." : "Capacitive impedance is -jX.";
+                                            color: #496177;
+                                            wrap: word-wrap;
+                                        }
+                                    }
+                                }
+
+                                if root.current_tool == 3 : Rectangle {
+                                    height: 290px;
+                                    border-radius: 16px;
+                                    background: #f7fbff;
+
+                                    VerticalLayout {
+                                        padding: 14px;
+                                        spacing: 10px;
+
+                                        Text {
+                                            text: "Microstrip Geometry";
+                                            color: #153968;
+                                            font-weight: 700;
+                                        }
+
+                                        Image {
+                                            height: 130px;
+                                            image-fit: contain;
+                                            source: @image-url("symbols/microstrip.png");
+                                        }
+
+                                        Text {
+                                            text: "This panel estimates Z0 and εeff from width, substrate height, and dielectric constant.";
+                                            color: #496177;
+                                            wrap: word-wrap;
+                                        }
+
+                                        Text {
+                                            text: "The same geometry unit is reused for width, height, and the guided wavelength result.";
+                                            color: #496177;
+                                            wrap: word-wrap;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
+            }
 
-                Button {
-                    min-width: 160px;
-                    text: "Convert λ → f";
-                    clicked => {
-                        eps_r = eps_r_str.to-float();
-                        mu_r = mu_r_str.to-float();
-                        lambda = lambda_str.to-float();
+            Rectangle {
+                height: 34px;
+                background: #14345e;
 
-                        freq = 300 / (lambda * sqrt(eps_r * mu_r));
+                HorizontalLayout {
+                    padding-left: 16px;
+                    padding-right: 16px;
+                    spacing: 12px;
 
-                        eps_r_str = eps_r.to-fixed(3);
-                        mu_r_str = mu_r.to-fixed(3);
-                        freq_str = freq.to-fixed(3);
-                        lambda_str = lambda.to-fixed(3);
+                    Text {
+                        text: root.current_tool_name;
+                        color: #dbe9fb;
+                        font-weight: 700;
+                    }
+
+                    Rectangle {
+                        width: 1px;
+                        background: #3f5f89;
+                    }
+
+                    Text {
+                        text: root.status_text;
+                        color: #ffffff;
+                        vertical-alignment: center;
                     }
                 }
             }
