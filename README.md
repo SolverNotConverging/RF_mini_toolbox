@@ -1,5 +1,8 @@
 # RF Mini Toolbox
 
+For a ready-to-run Windows build, use `slint_project.exe` in the project root.
+It is copied from `target/release/slint_project.exe` for convenience.
+
 RF Mini Toolbox is a small desktop RF and microwave utility built with Rust and
 [Slint](https://slint.dev/). It bundles a few common engineering calculations
 into a single GUI application:
