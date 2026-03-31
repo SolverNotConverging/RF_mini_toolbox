@@ -33,6 +33,35 @@ component ToolTab inherits Rectangle {
     }
 }
 
+component CardButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> selected: false;
+    callback clicked;
+
+    min-height: 76px;
+    max-height: 76px;
+    vertical-stretch: 0;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: selected ? #3b7bd6 : #dbe5f2;
+    background: selected ? #153968 : #f8fbff;
+
+    Text {
+        text: root.text;
+        color: root.selected ? #ffffff : #1f3552;
+        font-size: 16px;
+        font-weight: 700;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+}
+
 component InputCard inherits Rectangle {
     in property <string> label_text;
     in-out property <string> value_text;
@@ -771,9 +800,10 @@ export component MainWindow inherits Window {
                                     }
 
                                     HorizontalLayout {
-                                        spacing: 10px;
+                                        spacing: 12px;
 
-                                        ToolTab {
+                                        CardButton {
+                                            horizontal-stretch: 1;
                                             text: "Inductor";
                                             selected: root.react_kind == 0;
                                             clicked => {
@@ -782,7 +812,8 @@ export component MainWindow inherits Window {
                                             }
                                         }
 
-                                        ToolTab {
+                                        CardButton {
+                                            horizontal-stretch: 1;
                                             text: "Capacitor";
                                             selected: root.react_kind == 1;
                                             clicked => {
@@ -842,14 +873,16 @@ export component MainWindow inherits Window {
                                     HorizontalLayout {
                                         spacing: 12px;
 
-                                        Button {
+                                        CardButton {
+                                            horizontal-stretch: 1;
                                             text: root.react_kind == 0 ? "L to X" : "C to X";
                                             clicked => {
                                                 root.component_to_reactance();
                                             }
                                         }
 
-                                        Button {
+                                        CardButton {
+                                            horizontal-stretch: 1;
                                             text: root.react_kind == 0 ? "X to L" : "X to C";
                                             clicked => {
                                                 root.reactance_to_component();
