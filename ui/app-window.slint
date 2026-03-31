@@ -430,8 +430,8 @@ export component MainWindow inherits Window {
     private property <[string]> wavelength_units: ["um", "mm", "cm", "m"];
     private property <[string]> matrix_type_model: ["ABCD", "Z", "Y", "S"];
     private property <[string]> react_frequency_units: ["MHz", "GHz", "THz"];
-    private property <[string]> inductance_units: ["H", "mH", "uH", "nH", "pH"];
-    private property <[string]> capacitance_units: ["F", "mF", "uF", "nF", "pF"];
+    private property <[string]> inductance_units: ["H", "mH", "uH", "nH", "pH", "fH"];
+    private property <[string]> capacitance_units: ["F", "mF", "uF", "nF", "pF", "fF"];
     private property <[string]> reactance_units: ["ohm", "kohm", "Mohm"];
     private property <[string]> microstrip_length_units: ["um", "mil", "mm", "cm", "inch"];
     private property <[string]> microstrip_frequency_units: ["MHz", "GHz", "THz"];
@@ -834,6 +834,17 @@ export component MainWindow inherits Window {
                                             unit_index <=> root.react_freq_unit;
                                         }
 
+                                        ReadoutCard {
+                                            horizontal-stretch: 1;
+                                            label_text: "Imaginary impedance";
+                                            value_text: root.react_impedance_text;
+                                            footnote_text: root.react_kind == 0 ? "Positive imaginary impedance" : "Negative imaginary impedance";
+                                        }
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 12px;
+
                                         if root.react_kind == 0 : ComboInputCard {
                                             horizontal-stretch: 1;
                                             label_text: "Inductance";
@@ -849,10 +860,6 @@ export component MainWindow inherits Window {
                                             unit_model: root.capacitance_units;
                                             unit_index <=> root.react_capacitance_unit;
                                         }
-                                    }
-
-                                    HorizontalLayout {
-                                        spacing: 12px;
 
                                         ComboInputCard {
                                             horizontal-stretch: 1;
@@ -860,13 +867,6 @@ export component MainWindow inherits Window {
                                             value_text <=> root.react_x_value;
                                             unit_model: root.reactance_units;
                                             unit_index <=> root.react_x_unit;
-                                        }
-
-                                        ReadoutCard {
-                                            horizontal-stretch: 1;
-                                            label_text: "Imaginary impedance";
-                                            value_text: root.react_impedance_text;
-                                            footnote_text: root.react_kind == 0 ? "Positive imaginary impedance" : "Negative imaginary impedance";
                                         }
                                     }
 
